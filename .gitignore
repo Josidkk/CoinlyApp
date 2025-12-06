@@ -47,3 +47,4 @@ app.*.map.json
 # Supabase config with credentials (keep only .example file)
 lib/config/supabase_config.dart
 
+*.txt
