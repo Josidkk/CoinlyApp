@@ -6,9 +6,17 @@ import '../models/estadisticas_home.dart';
 import '../models/prestamo.dart';
 import '../services/auth_service.dart';
 import '../services/prestamo_service.dart';
+import 'prestamos_screen.dart';
+import 'detalle_prestamo_screen.dart';
+
+import 'package:flutter/cupertino.dart'; // Para el pull-to-refresh
+import 'package:flutter/services.dart';  // Para la vibración (HapticFeedback)
+
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onNavigateToPrestamos;
+  
+  const HomeScreen({super.key, this.onNavigateToPrestamos});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -51,86 +59,95 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FAFC),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _cargarDatos,
-              color: const Color(0xFF667eea),
-              child: CustomScrollView(
-                slivers: [
-                  // AppBar
-                  SliverAppBar(
-                    expandedHeight: 200,
-                    floating: false,
-                    pinned: true,
-                    backgroundColor: const Color(0xFF667eea),
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Container(
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-                          ),
-                        ),
-                        child: SafeArea(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20.0),
-                            child: Column(
+      backgroundColor: const Color(0xFF0F172A),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(0, -0.6),
+            radius: 1.2,
+            colors: [
+              const Color(0xFF1E293B).withOpacity(0.6),
+              const Color(0xFF0F172A),
+            ],
+          ),
+        ),
+        child: _isLoading
+    ? const Center(child: CircularProgressIndicator(color: Color(0xFFF59E0B)))
+    // QUITAMOS EL RefreshIndicator AQUÍ
+    : CustomScrollView(
+        // ESTO ES CLAVE: Permite el rebote y estiramiento incluso en Android
+        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()), 
+        slivers: [
+          // AGREGAMOS EL REFRESH DE TIPO OVERSCROLL COMO EL PRIMER SLIVER
+          CupertinoSliverRefreshControl(
+            onRefresh: () async {
+              // 1. Hacemos que el celular vibre ligeramente
+              HapticFeedback.mediumImpact(); 
+              
+              // 2. Ejecutamos tu función de carga de datos
+              await _cargarDatos();
+            },
+          ),
+          
+          // AppBar (Tu AppBar actual se queda igual)
+          SliverToBoxAdapter(
+            child: SafeArea(
+              bottom: false,
+
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisAlignment: MainAxisAlignment.end,
                               children: [
-                                Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 30,
-                                      backgroundColor: Colors.white,
-                                      child: Text(
-                                        _usuario?.usuaNombres
-                                                .substring(0, 1)
-                                                .toUpperCase() ??
-                                            'U',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF667eea),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            '¡Hola!',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              color: Colors.white.withOpacity(
-                                                0.9,
-                                              ),
-                                            ),
-                                          ),
-                                          Text(
-                                            _usuario?.nombreCompleto ??
-                                                'Usuario',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  '¡Hola, ${(_usuario?.usuaNombres.split(' ')[0]) ?? 'Usuario'}!',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Text(
+                                  'Gestión Inteligente de Préstamos',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.white.withOpacity(0.5),
+                                  ),
                                 ),
                               ],
                             ),
-                          ),
+                            Container(
+                              width: 55,
+                              height: 55,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF59E0B).withOpacity(0.15),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFFF59E0B).withOpacity(0.3),
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFF59E0B).withOpacity(0.2),
+                                    blurRadius: 15,
+                                    spreadRadius: 2,
+                                  ),
+                                ],
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                _usuario?.usuaNombres.substring(0, 1).toUpperCase() ?? 'U',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFFF59E0B),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -139,19 +156,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Contenido
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.all(20.0),
+                      padding: const EdgeInsets.fromLTRB(24, 10, 24, 24),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Estadísticas
-                          Text(
-                            'Resumen General',
-                            style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                              color: const Color(0xFF2d3748),
+                            Text(
+                              'Resumen General',
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
                           const SizedBox(height: 16),
 
                           // Grid de estadísticas
@@ -202,19 +219,26 @@ class _HomeScreenState extends State<HomeScreen> {
                                 'Préstamos Recientes',
                                 style: GoogleFonts.poppins(
                                   fontSize: 20,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF2d3748),
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
                                 ),
                               ),
                               TextButton(
                                 onPressed: () {
-                                  // TODO: Navegar a lista completa
+                                  if (widget.onNavigateToPrestamos != null) {
+                                    widget.onNavigateToPrestamos!();
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const PrestamosScreen()),
+                                    );
+                                  }
                                 },
                                 child: Text(
                                   'Ver todos',
                                   style: GoogleFonts.poppins(
-                                    color: const Color(0xFF667eea),
-                                    fontWeight: FontWeight.w500,
+                                    color: const Color(0xFFF59E0B),
+                                    fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
@@ -259,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-            ),
+      ),
     );
   }
 
@@ -272,13 +296,14 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -290,12 +315,19 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFFF59E0B).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFF59E0B).withOpacity(0.05),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
                 ),
-                child: Icon(icon, color: color, size: 24),
+                child: Icon(icon, color: const Color(0xFFF59E0B), size: 22),
               ),
             ],
           ),
@@ -307,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: const Color(0xFF2d3748),
+                  color: Colors.white,
                 ),
               ),
               const SizedBox(height: 4),
@@ -315,7 +347,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 title,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  color: const Color(0xFF718096),
+                  color: Colors.white.withOpacity(0.7),
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -328,87 +360,98 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildPrestamoCard(Prestamo prestamo) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetallePrestamoScreen(prestamo: prestamo),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      prestamo.clienteNombre ?? 'Cliente',
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF2d3748),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        prestamo.clienteNombre ?? 'Cliente',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Préstamo #${prestamo.presId}',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: const Color(0xFF718096),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Préstamo #${prestamo.presId}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.white.withOpacity(0.4),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF667eea).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _formatCurrency(prestamo.presCapitalInicial),
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF667eea),
+                    ],
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _buildInfoChip(
-                Icons.calendar_today,
-                DateFormat('dd/MM/yyyy').format(prestamo.presFechaInicioPago),
-              ),
-              const SizedBox(width: 8),
-              _buildInfoChip(Icons.percent, '${prestamo.presTasaInteres}%'),
-              const SizedBox(width: 8),
-              _buildInfoChip(
-                Icons.payment,
-                '${prestamo.presNumeroCuotas} cuotas',
-              ),
-            ],
-          ),
-        ],
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    _formatCurrency(prestamo.presCapitalInicial),
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: const Color(0xFFF59E0B),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                _buildInfoChip(
+                  Icons.calendar_today,
+                  DateFormat('dd/MM/yyyy').format(prestamo.presFechaInicioPago),
+                ),
+                const SizedBox(width: 8),
+                _buildInfoChip(Icons.percent, '${prestamo.presTasaInteres}%'),
+                const SizedBox(width: 8),
+                _buildInfoChip(
+                  Icons.payment,
+                  '${prestamo.presNumeroCuotas} cuotas',
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -417,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF7FAFC),
+        color: const Color(0xFF0F172A),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

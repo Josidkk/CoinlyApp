@@ -92,14 +92,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF667eea),
+              backgroundColor: const Color(0xFFF59E0B),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
             child: Text(
               'Cerrar Sesión',
-              style: GoogleFonts.poppins(color: Colors.white),
+              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -183,7 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             'Funcionalidad de eliminación de cuenta en desarrollo',
             style: GoogleFonts.poppins(),
           ),
-          backgroundColor: Colors.orange.shade400,
+          backgroundColor: const Color(0xFFF59E0B),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
@@ -207,13 +207,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFFF7FAFC),
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: Color(0xFF0F172A),
+        body: Center(child: CircularProgressIndicator(color: Color(0xFFF59E0B))),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7FAFC),
+      backgroundColor: const Color(0xFF0F172A),
       body: CustomScrollView(
         slivers: [
           // AppBar
@@ -221,14 +221,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
             expandedHeight: 200,
             floating: false,
             pinned: true,
-            backgroundColor: const Color(0xFF667eea),
+            backgroundColor: const Color(0xFFF59E0B),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
                   ),
                 ),
                 child: SafeArea(
@@ -240,9 +240,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Row(
                           children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundColor: Colors.white,
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                              ),
+                              alignment: Alignment.center,
                               child: Text(
                                 _usuario?.usuaNombres
                                         .substring(0, 1)
@@ -251,7 +257,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: GoogleFonts.poppins(
                                   fontSize: 32,
                                   fontWeight: FontWeight.bold,
-                                  color: const Color(0xFF667eea),
+                                  color: Colors.white,
                                 ),
                               ),
                             ),
@@ -302,8 +308,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Información de la Cuenta',
                     style: GoogleFonts.poppins(
                       fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF2d3748),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -318,7 +324,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: GoogleFonts.poppins(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFF2d3748),
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -332,8 +338,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Acciones',
                     style: GoogleFonts.poppins(
                       fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF2d3748),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -342,7 +348,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     icon: Icons.logout,
                     title: 'Cerrar Sesión',
                     subtitle: 'Salir de tu cuenta',
-                    color: const Color(0xFF667eea),
+                    color: const Color(0xFFF59E0B),
                     onTap: _handleLogout,
                   ),
 
@@ -382,13 +388,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -458,10 +465,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: const Color(0xFF667eea).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(10),
+            color: const Color(0xFFF59E0B).withOpacity(0.1),
           ),
-          child: Icon(icon, color: const Color(0xFF667eea), size: 24),
+          child: Icon(icon, color: const Color(0xFFF59E0B), size: 24),
         ),
         const SizedBox(width: 16),
         Expanded(
@@ -480,8 +486,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 value,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF2d3748),
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white.withOpacity(0.9),
                 ),
               ),
             ],
@@ -495,13 +501,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -510,12 +517,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF667eea).withOpacity(0.1),
+              color: const Color(0xFFF59E0B).withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               _isDarkMode ? Icons.dark_mode : Icons.light_mode,
-              color: const Color(0xFF667eea),
+              color: const Color(0xFFF59E0B),
               size: 24,
             ),
           ),
@@ -528,8 +535,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   'Tema Oscuro',
                   style: GoogleFonts.poppins(
                     fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: const Color(0xFF2d3748),
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -554,7 +561,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'Tema oscuro ${value ? 'activado' : 'desactivado'} (próximamente)',
                     style: GoogleFonts.poppins(),
                   ),
-                  backgroundColor: const Color(0xFF667eea),
+                  backgroundColor: const Color(0xFFF59E0B),
                   behavior: SnackBarBehavior.floating,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -562,7 +569,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               );
             },
-            activeColor: const Color(0xFF667eea),
+            activeColor: const Color(0xFFF59E0B),
           ),
         ],
       ),
@@ -582,13 +589,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withOpacity(0.05)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(0.2),
               blurRadius: 10,
-              offset: const Offset(0, 4),
+              offset: const Offset(0, 5),
             ),
           ],
         ),
@@ -611,8 +619,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     title,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: const Color(0xFF2d3748),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),

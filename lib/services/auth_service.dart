@@ -26,15 +26,17 @@ class AuthService {
       await _storageService.guardarUsuario(usuarioObj);
       await _storageService.guardarToken('token_${usuarioObj.usuaId}');
 
-      return {
+     return {
         'success': true,
         'message': 'Login exitoso',
         'usuario': usuarioObj,
       };
+
     } catch (e) {
+      print(e.toString());
       return {
         'success': false,
-        'message': 'Error al iniciar sesión: ${e.toString()}',
+        'message': 'Usuario o contraseña incorrectos',
       };
     }
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'home_screen.dart';
 import 'settings_screen.dart';
+import 'prestamos_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -13,7 +14,23 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [const HomeScreen(), const SettingsScreen()];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      HomeScreen(
+        onNavigateToPrestamos: () {
+          setState(() {
+            _currentIndex = 1;
+          });
+        },
+      ),
+      const PrestamosScreen(),
+      const SettingsScreen(),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,15 +53,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(30),
           child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF667eea).withOpacity(0.95),
-                  const Color(0xFF764ba2).withOpacity(0.95),
-                ],
-              ),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1E293B),
             ),
             child: BottomNavigationBar(
               currentIndex: _currentIndex,
@@ -54,15 +64,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               backgroundColor: Colors.transparent,
               elevation: 0,
               type: BottomNavigationBarType.fixed,
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Colors.white.withOpacity(0.5),
+              selectedItemColor: const Color(0xFFF59E0B),
+              unselectedItemColor: Colors.white.withOpacity(0.35),
+              showSelectedLabels: true,
+              showUnselectedLabels: true,
               selectedLabelStyle: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
               ),
               unselectedLabelStyle: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
+                fontSize: 11,
               ),
               items: [
                 BottomNavigationBarItem(
@@ -75,8 +86,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 ),
                 BottomNavigationBarItem(
                   icon: _buildNavIcon(
-                    icon: Icons.settings_outlined,
+                    icon: Icons.receipt_long_outlined,
                     isSelected: _currentIndex == 1,
+                  ),
+                  activeIcon: _buildNavIcon(
+                    icon: Icons.receipt_long,
+                    isSelected: true,
+                  ),
+                  label: 'Préstamos',
+                ),
+                BottomNavigationBarItem(
+                  icon: _buildNavIcon(
+                    icon: Icons.settings_outlined,
+                    isSelected: _currentIndex == 2,
                   ),
                   activeIcon: _buildNavIcon(
                     icon: Icons.settings,

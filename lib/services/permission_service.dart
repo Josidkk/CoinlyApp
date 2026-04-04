@@ -1,11 +1,12 @@
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'dart:io' show Platform;
 
 class PermissionService {
   // Solicitar permisos necesarios según la versión de Android
   Future<bool> solicitarPermisosNecesarios() async {
-    if (!Platform.isAndroid) {
-      return true; // En iOS u otras plataformas, retornar true
+    if (kIsWeb || !Platform.isAndroid) {
+      return true; 
     }
 
     // Para Android, verificar permisos básicos
