@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/usuario.dart';
 import '../models/estadisticas_home.dart';
-import '../models/prestamo.dart';
+import '../models/prestamo_Detallado.dart';
 import '../services/auth_service.dart';
 import '../services/prestamo_service.dart';
 import 'prestamos_screen.dart';
@@ -28,7 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Usuario? _usuario;
   EstadisticasHome _estadisticas = EstadisticasHome.empty();
-  List<Prestamo> _prestamosRecientes = [];
+  List<Prestamo_Detallado_DTO> _prestamosRecientes = [];
   bool _isLoading = true;
 
   @override
@@ -171,40 +171,100 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           const SizedBox(height: 16),
 
-                          // Grid de estadísticas
-                          GridView.count(
-                            crossAxisCount: 2,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 1.3,
-                            children: [
-                              _buildStatCard(
-                                'Préstamos Activos',
-                                _estadisticas.totalPrestamosActivos.toString(),
-                                Icons.receipt_long,
-                                const Color(0xFF667eea),
+                          // Tarjeta Principal: Capital y Por Cobrar
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFF59E0B), Color(0xFFE35D5B)], // Naranja a Rojo vibrante
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
                               ),
-                              _buildStatCard(
-                                'Total Clientes',
-                                _estadisticas.totalClientes.toString(),
-                                Icons.people,
-                                const Color(0xFF48bb78),
-                              ),
-                              _buildStatCard(
-                                'Capital Prestado',
-                                _formatCurrency(
-                                  _estadisticas.totalCapitalPrestado,
+                              borderRadius: BorderRadius.circular(32),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFF59E0B).withOpacity(0.3),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 0),
                                 ),
-                                Icons.attach_money,
-                                const Color(0xFFed8936),
+                              ],
+                            ),
+                            child: Stack(
+                              clipBehavior: Clip.none,
+                              children: [
+                                Positioned(
+                                  right: -20,
+                                  top: -10,
+                                  child: Icon(Icons.account_balance_wallet_rounded, size: 120, color: Colors.white.withOpacity(0.15)),
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Capital Prestado Global', style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.9), fontSize: 13, fontWeight: FontWeight.w500)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _formatCurrency(_estadisticas.totalCapitalPrestado), 
+                                      style: GoogleFonts.poppins(color: Colors.white, fontSize: 34, fontWeight: FontWeight.bold, height: 1.1),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 28),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Total Por Cobrar', style: GoogleFonts.poppins(color: Colors.white.withOpacity(0.8), fontSize: 11)),
+                                            Text(
+                                              _formatCurrency(_estadisticas.totalPorCobrar), 
+                                              style: GoogleFonts.poppins(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600),
+                                            ),
+                                          ],
+                                        ),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white.withOpacity(0.25),
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.trending_up_rounded, color: Colors.white, size: 16),
+                                              const SizedBox(width: 4),
+                                              Text('Activo', style: GoogleFonts.poppins(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Cards Secundarios
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _buildStatCard(
+                                  'Préstamos Activos',
+                                  _estadisticas.totalPrestamosActivos.toString(),
+                                  Icons.receipt_long_rounded,
+                                  const Color(0xFF3B82F6),
+                                ),
                               ),
-                              _buildStatCard(
-                                'Por Cobrar',
-                                _formatCurrency(_estadisticas.totalPorCobrar),
-                                Icons.account_balance_wallet,
-                                const Color(0xFFe53e3e),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: _buildStatCard(
+                                  'Gestión Clientes',
+                                  _estadisticas.totalClientes.toString(),
+                                  Icons.people_alt_rounded,
+                                  const Color(0xFF10B981),
+                                ),
                               ),
                             ],
                           ),
@@ -294,16 +354,16 @@ class _HomeScreenState extends State<HomeScreen> {
     Color color,
   ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -334,20 +394,23 @@ class _HomeScreenState extends State<HomeScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 12),
               Text(
                 value,
                 style: GoogleFonts.poppins(
-                  fontSize: 24,
+                  fontSize: 26,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
+                  height: 1.1,
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 6),
               Text(
                 title,
                 style: GoogleFonts.poppins(
                   fontSize: 12,
-                  color: Colors.white.withOpacity(0.7),
+                  color: Colors.white.withOpacity(0.6),
+                  fontWeight: FontWeight.w500,
                 ),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
@@ -359,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildPrestamoCard(Prestamo prestamo) {
+  Widget _buildPrestamoCard(Prestamo_Detallado_DTO prestamo) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
@@ -395,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        prestamo.clienteNombre ?? 'Cliente',
+                        prestamo.clienteNombre,
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -405,7 +468,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Préstamo #${prestamo.presId}',
+                        'Préstamo #${prestamo.base.id}',
                         style: GoogleFonts.poppins(
                           fontSize: 12,
                           color: Colors.white.withOpacity(0.4),
@@ -424,7 +487,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    _formatCurrency(prestamo.presCapitalInicial),
+                    _formatCurrency(prestamo.base.capitalInicial),
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -439,14 +502,14 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 _buildInfoChip(
                   Icons.calendar_today,
-                  DateFormat('dd/MM/yyyy').format(prestamo.presFechaInicioPago),
+                  DateFormat('dd/MM/yyyy').format(prestamo.base.fechaInicioPago),
                 ),
                 const SizedBox(width: 8),
-                _buildInfoChip(Icons.percent, '${prestamo.presTasaInteres}%'),
+                _buildInfoChip(Icons.percent, '${prestamo.base.tasaInteres}%'),
                 const SizedBox(width: 8),
                 _buildInfoChip(
-                  Icons.payment,
-                  '${prestamo.presNumeroCuotas} cuotas',
+                  Icons.check_circle_outline,
+                  prestamo.base.estado ? 'Activo' : 'Inactivo',
                 ),
               ],
             ),

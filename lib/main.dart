@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter/services.dart';
 import 'config/supabase_config.dart';
 import 'services/auth_service.dart';
@@ -17,6 +18,9 @@ void main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+
+  // Inicializar datos de localización (requerido por intl/DateFormat con locale)
+  await initializeDateFormatting('es', null);
 
   // Inicializar Supabase
   try {

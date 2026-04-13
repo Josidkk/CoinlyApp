@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../models/usuario.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
@@ -19,7 +20,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String? _municipioDescripcion;
   String? _departamentoDescripcion;
   bool _isLoading = true;
-  bool _isDarkMode = false;
 
   @override
   void initState() {
@@ -30,79 +30,118 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _cargarDatos() async {
     setState(() => _isLoading = true);
 
-    print('=== INICIO CARGA DE DATOS ===');
+    try {
+      // Cargar usuario básico
+      _usuario = await _authService.obtenerUsuarioActual();
+      
+      // Cargar datos detallados
+      final usuarioDetallado = await _authService.obtenerUsuarioDetallado();
 
-    // Cargar usuario básico
-    _usuario = await _authService.obtenerUsuarioActual();
-    print('Usuario básico cargado: ${_usuario?.usuaId}');
-    print('Role ID del usuario: ${_usuario?.roleId}');
-    print('Municipio código: ${_usuario?.muniCodigo}');
-    print('Estado civil ID: ${_usuario?.esciId}');
-
-    // Cargar datos detallados
-    print('Llamando a obtenerUsuarioDetallado...');
-    final usuarioDetallado = await _authService.obtenerUsuarioDetallado();
-    print('Usuario detallado recibido: $usuarioDetallado');
-
-    if (usuarioDetallado != null) {
-      print('Procesando datos detallados...');
-      _rolDescripcion = usuarioDetallado['rol_descripcion'] as String?;
-      _estadoCivilDescripcion =
-          usuarioDetallado['estado_civil_descripcion'] as String?;
-      _municipioDescripcion =
-          usuarioDetallado['municipio_descripcion'] as String?;
-      _departamentoDescripcion =
-          usuarioDetallado['departamento_descripcion'] as String?;
-
-      print('Rol: $_rolDescripcion');
-      print('Estado Civil: $_estadoCivilDescripcion');
-      print('Municipio: $_municipioDescripcion');
-      print('Departamento: $_departamentoDescripcion');
-    } else {
-      print('ERROR: usuarioDetallado es null');
+      if (usuarioDetallado != null) {
+        _rolDescripcion = usuarioDetallado['rol_descripcion'] as String?;
+        _estadoCivilDescripcion = usuarioDetallado['estado_civil_descripcion'] as String?;
+        _municipioDescripcion = usuarioDetallado['municipio_descripcion'] as String?;
+        _departamentoDescripcion = usuarioDetallado['departamento_descripcion'] as String?;
+      }
+    } catch (e) {
+      print('Error cargando datos de configuración: $e');
     }
 
-    print('=== FIN CARGA DE DATOS ===');
-
-    // TODO: Cargar preferencia de tema desde storage
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
   Future<void> _handleLogout() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          '¿Cerrar Sesión?',
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-        ),
-        content: Text(
-          '¿Estás seguro que deseas cerrar sesión?',
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancelar',
-              style: GoogleFonts.poppins(color: Colors.grey),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF59E0B),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
+      builder: (context) => Dialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icono de Cabecera
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF59E0B).withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: Color(0xFFF59E0B),
+                  size: 32,
+                ),
               ),
-            ),
-            child: Text(
-              'Cerrar Sesión',
-              style: GoogleFonts.poppins(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
+              const SizedBox(height: 20),
+              // Título
+              Text(
+                '¿Cerrar Sesión?',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Descripción
+              Text(
+                '¿Estás seguro que deseas salir? Tendrás que ingresar tus credenciales nuevamente.',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.white.withOpacity(0.6),
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 32),
+              // Botones
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        'Cancelar',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white.withOpacity(0.4),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF59E0B),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      child: Text(
+                        'Confirmar',
+                        style: GoogleFonts.poppins(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
 
@@ -114,93 +153,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         (route) => false,
       );
     }
-  }
-
-  Future<void> _handleDeleteAccount() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          '⚠️ Eliminar Cuenta',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: Colors.red.shade700,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Esta acción es irreversible. Se eliminarán:',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 12),
-            _buildWarningItem('• Toda tu información personal'),
-            _buildWarningItem('• Historial de préstamos'),
-            _buildWarningItem('• Configuraciones'),
-            const SizedBox(height: 12),
-            Text(
-              '¿Estás completamente seguro?',
-              style: GoogleFonts.poppins(
-                fontWeight: FontWeight.w600,
-                color: Colors.red.shade700,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(
-              'Cancelar',
-              style: GoogleFonts.poppins(color: Colors.grey),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red.shade600,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: Text(
-              'Eliminar',
-              style: GoogleFonts.poppins(color: Colors.white),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      // TODO: Implementar eliminación de cuenta en el servicio
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Funcionalidad de eliminación de cuenta en desarrollo',
-            style: GoogleFonts.poppins(),
-          ),
-          backgroundColor: const Color(0xFFF59E0B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget _buildWarningItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(
-        text,
-        style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey.shade700),
-      ),
-    );
   }
 
   @override
@@ -215,361 +167,233 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
-          // AppBar
+          // Perfil Hero Header - Diseño Minimalista
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 240,
+            collapsedHeight: kToolbarHeight + 20,
             floating: false,
             pinned: true,
-            backgroundColor: const Color(0xFFF59E0B),
+            elevation: 0,
+            backgroundColor: const Color(0xFF0F172A),
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
-                  ),
+                  color: Color(0xFF0F172A),
                 ),
-                child: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.1),
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.white.withOpacity(0.2)),
+                child: Stack(
+                  children: [
+                    // Círculo decorativo de fondo (Glow sutil)
+                    Positioned(
+                      top: -50,
+                      right: -50,
+                      child: Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              const Color(0xFFF59E0B).withOpacity(0.15),
+                              const Color(0xFFF59E0B).withOpacity(0),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                        const SizedBox(height: 40),
+                        // Avatar con Anillo de Luz
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: const Color(0xFFF59E0B).withOpacity(0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1E293B),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFFF59E0B),
+                                width: 2,
                               ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                _usuario?.usuaNombres
-                                        .substring(0, 1)
-                                        .toUpperCase() ??
-                                    'U',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFF59E0B).withOpacity(0.15),
+                                  blurRadius: 20,
+                                  spreadRadius: 5,
                                 ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              _usuario?.usuaNombres.isNotEmpty == true 
+                                  ? _usuario!.usuaNombres.substring(0, 1).toUpperCase() 
+                                  : 'U',
+                              style: GoogleFonts.poppins(
+                                fontSize: 40, 
+                                fontWeight: FontWeight.bold, 
+                                color: const Color(0xFFF59E0B)
                               ),
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _usuario?.nombreCompleto ?? 'Usuario',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    '@${_usuario?.usuaUsuario ?? 'usuario'}',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      color: Colors.white.withOpacity(0.9),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _usuario?.nombreCompleto ?? 'Usuario',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.poppins(
+                            fontSize: 24, 
+                            fontWeight: FontWeight.bold, 
+                            color: Colors.white,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.05),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '@${_usuario?.usuaUsuario ?? 'usuario'}',
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13, 
+                              color: const Color(0xFFF59E0B),
+                              fontWeight: FontWeight.w500,
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),
                   ),
+                ],
                 ),
               ),
             ),
           ),
 
-          // Contenido
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Información de la Cuenta
-                  Text(
-                    'Información de la Cuenta',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+          // Contenido de Configuración
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                _buildSectionHeader('INFORMACIÓN PERSONAL'),
+                const SizedBox(height: 16),
+                _buildInfoCard(),
+                
+                const SizedBox(height: 40),
+                
+                _buildSectionHeader('HERRAMIENTAS'),
+                const SizedBox(height: 16),
+                _buildActionCard(
+                  icon: Icons.logout_rounded,
+                  title: 'Cerrar Sesión',
+                  subtitle: 'Salir de la aplicación de forma segura',
+                  color: const Color(0xFFF59E0B),
+                  onTap: _handleLogout,
+                ),
 
-                  _buildInfoCard(),
-
-                  const SizedBox(height: 32),
-
-                  // Apariencia
-                  Text(
-                    'Apariencia',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  _buildThemeCard(),
-
-                  const SizedBox(height: 32),
-
-                  // Acciones
-                  Text(
-                    'Acciones',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  _buildActionCard(
-                    icon: Icons.logout,
-                    title: 'Cerrar Sesión',
-                    subtitle: 'Salir de tu cuenta',
-                    color: const Color(0xFFF59E0B),
-                    onTap: _handleLogout,
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  _buildActionCard(
-                    icon: Icons.delete_forever,
-                    title: 'Eliminar Cuenta',
-                    subtitle: 'Eliminar permanentemente tu cuenta',
-                    color: Colors.red.shade600,
-                    onTap: _handleDeleteAccount,
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // Versión
-                  Center(
-                    child: Text(
-                      'Versión 1.0.0',
-                      style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        color: Colors.grey.shade500,
+                const SizedBox(height: 60),
+                
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        'CoinlyApp',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white.withOpacity(0.1),
+                        ),
                       ),
-                    ),
+                      Text(
+                        'Versión 1.2.0 - Build Estable',
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 100), // Espacio para el navbar
-                ],
-              ),
+                ),
+                const SizedBox(height: 120),
+              ]),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Text(
+      title,
+      style: GoogleFonts.poppins(
+        fontSize: 12,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.5,
+        color: Colors.white.withOpacity(0.3),
       ),
     );
   }
 
   Widget _buildInfoCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withOpacity(0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
       ),
       child: Column(
         children: [
+          _buildInfoRow(Icons.badge_outlined, 'Identificador', '#${_usuario?.usuaId ?? '---'}'),
+          _buildInfoRow(Icons.admin_panel_settings_outlined, 'Rol del Sistema', _rolDescripcion ?? '---'),
+          _buildInfoRow(Icons.favorite_outline_rounded, 'Estado Civil', _estadoCivilDescripcion ?? '---'),
+          _buildInfoRow(Icons.location_on_outlined, 'Municipio', _municipioDescripcion ?? '---'),
+          _buildInfoRow(Icons.map_outlined, 'Departamento', _departamentoDescripcion ?? '---'),
           _buildInfoRow(
-            icon: Icons.person_outline,
-            label: 'Nombre Completo',
-            value: _usuario?.nombreCompleto ?? 'N/A',
-          ),
-          const Divider(height: 32),
-          _buildInfoRow(
-            icon: Icons.account_circle_outlined,
-            label: 'Usuario',
-            value: _usuario?.usuaUsuario ?? 'N/A',
-          ),
-          const Divider(height: 32),
-          _buildInfoRow(
-            icon: Icons.badge_outlined,
-            label: 'ID de Usuario',
-            value: '#${_usuario?.usuaId ?? 'N/A'}',
-          ),
-          const Divider(height: 32),
-          _buildInfoRow(
-            icon: Icons.admin_panel_settings_outlined,
-            label: 'Rol',
-            value: _rolDescripcion ?? 'N/A',
-          ),
-          const Divider(height: 32),
-          _buildInfoRow(
-            icon: Icons.favorite_outline,
-            label: 'Estado Civil',
-            value: _estadoCivilDescripcion ?? 'N/A',
-          ),
-          const Divider(height: 32),
-          _buildInfoRow(
-            icon: Icons.location_city_outlined,
-            label: 'Municipio',
-            value: _municipioDescripcion ?? 'N/A',
-          ),
-          const Divider(height: 32),
-          _buildInfoRow(
-            icon: Icons.map_outlined,
-            label: 'Departamento',
-            value: _departamentoDescripcion ?? 'N/A',
-          ),
-          const Divider(height: 32),
-          _buildInfoRow(
-            icon: Icons.calendar_today_outlined,
-            label: 'Fecha de Registro',
-            value: _usuario?.usuaFechaCreacion != null
-                ? '${_usuario!.usuaFechaCreacion!.day}/${_usuario!.usuaFechaCreacion!.month}/${_usuario!.usuaFechaCreacion!.year}'
-                : 'N/A',
+            Icons.calendar_month_rounded, 
+            'Registro', 
+            _usuario?.usuaFechaCreacion != null ? DateFormat('dd MMM yyyy').format(_usuario!.usuaFechaCreacion!) : '---',
+            isLast: true
           ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-  }) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF59E0B).withOpacity(0.1),
-          ),
-          child: Icon(icon, color: const Color(0xFFF59E0B), size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white.withOpacity(0.9),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildThemeCard() {
+  Widget _buildInfoRow(IconData icon, String label, String value, {bool isLast = false}) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        border: isLast ? null : Border(bottom: BorderSide(color: Colors.white.withOpacity(0.03))),
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              _isDarkMode ? Icons.dark_mode : Icons.light_mode,
-              color: const Color(0xFFF59E0B),
-              size: 24,
-            ),
-          ),
+          Icon(icon, color: const Color(0xFFF59E0B).withOpacity(0.5), size: 20),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Tema Oscuro',
-                  style: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _isDarkMode ? 'Activado' : 'Desactivado',
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
+                Text(label, style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withOpacity(0.3))),
+                Text(value, style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.9))),
               ],
             ),
-          ),
-          Switch(
-            value: _isDarkMode,
-            onChanged: (value) {
-              setState(() => _isDarkMode = value);
-              // TODO: Guardar preferencia y aplicar tema
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Tema oscuro ${value ? 'activado' : 'desactivado'} (próximamente)',
-                    style: GoogleFonts.poppins(),
-                  ),
-                  backgroundColor: const Color(0xFFF59E0B),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              );
-            },
-            activeColor: const Color(0xFFF59E0B),
           ),
         ],
       ),
@@ -583,63 +407,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E293B),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1E293B),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                    ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      Text(subtitle, style: GoogleFonts.poppins(fontSize: 12, color: Colors.white.withOpacity(0.4))),
+                    ],
                   ),
-                ],
-              ),
+                ),
+                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white.withOpacity(0.2)),
+              ],
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Colors.grey.shade400,
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -1,0 +1,48 @@
+class Cliente {
+  final int id;
+  final String nombres;
+  final String apellidos;
+  final int estadoCivilId;
+  final String municipioCodigo;
+  final bool estado;
+  final String? imagenIdentidad; // Puede ser nulo si no hay foto
+
+  Cliente({
+    required this.id,
+    required this.nombres,
+    required this.apellidos,
+    required this.estadoCivilId,
+    required this.municipioCodigo,
+    required this.estado,
+    this.imagenIdentidad,
+  });
+
+  
+  factory Cliente.fromMap(Map<String, dynamic> map) {
+    return Cliente(
+      id: map['clie_id'],
+      nombres: map['clie_nombres'] ?? '',
+      apellidos: map['clie_apellidos'] ?? '',
+      estadoCivilId: map['esci_id'],
+      municipioCodigo: map['muni_codigo'],
+      estado: map['clie_estado'] ?? false,
+      imagenIdentidad: map['clie_img_identidad'],
+    );
+  }
+
+  // Prepara los datos para ser grabados e
+  Map<String, dynamic> toMap() {
+    return {
+      'clie_id': id,
+      'clie_nombres': nombres,
+      'clie_apellidos': apellidos,
+      'esci_id': estadoCivilId,
+      'muni_codigo': municipioCodigo,
+      'clie_estado': estado,
+      'clie_img_identidad': imagenIdentidad,
+    };
+  }
+
+
+  String get nombreCompleto => '$nombres $apellidos'.trim();
+}

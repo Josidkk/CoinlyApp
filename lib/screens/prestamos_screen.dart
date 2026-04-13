@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../models/prestamo.dart';
+import '../models/prestamo_Detallado.dart';
 import '../services/prestamo_service.dart';
 import 'detalle_prestamo_screen.dart';
+import 'nuevo_prestamo_screen.dart';
 
 class PrestamosScreen extends StatefulWidget {
   const PrestamosScreen({super.key});
@@ -14,8 +15,8 @@ class PrestamosScreen extends StatefulWidget {
 
 class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProviderStateMixin {
   final _prestamoService = PrestamoService();
-  List<Prestamo> _prestamos = [];
-  List<Prestamo> _filteredPrestamos = [];
+  List<Prestamo_Detallado_DTO> _prestamos = [];
+  List<Prestamo_Detallado_DTO> _filteredPrestamos = [];
   bool _isLoading = true;
   final TextEditingController _searchController = TextEditingController();
   late TabController _tabController;
@@ -67,12 +68,13 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
     
     setState(() {
       _filteredPrestamos = _prestamos.where((p) {
-        final nombreMatches = (p.clienteNombre ?? '').toLowerCase().contains(query);
-        final idMatches = p.presId.toString().contains(query);
-        
-        // Filtro por estado real desde RPC
-        bool isMora = p.estaEnMora; 
-        
+        final nombreMatches = p.clienteNombre.toLowerCase().contains(query);
+        final idMatches = p.base.id.toString().contains(query);
+
+        // estaEnMora: campo calculado no disponible en el modelo base.
+        // Pendiente de implementación en backend. Por ahora todos "Al Día".
+        const bool isMora = false;
+
         bool statusMatches = true;
         if (_currentFilter == 'En Mora') statusMatches = isMora;
         if (_currentFilter == 'Al Día') statusMatches = !isMora;
@@ -143,9 +145,11 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
             color: Colors.transparent,
             child: InkWell(
               onTap: () {
-                // TODO: Navigator.push(context, MaterialPageRoute(builder: (context) => NuevoPrestamoScreen()));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Crear nuevo préstamo (Próximamente)')),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NuevoPrestamoScreen(),
+                  ),
                 );
               },
               borderRadius: BorderRadius.circular(14), // Bordes más modernos
@@ -228,17 +232,32 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildAdvancedLoanCard(Prestamo prestamo, Color primaryOrange, Color surfaceColor) {
-    bool isMora = prestamo.estaEnMora;
-    // Cálculo real del progreso basado en capital pagado vs capital inicial
-    double progress = prestamo.presCapitalInicial > 0 
-        ? (prestamo.capitalPagado / prestamo.presCapitalInicial).clamp(0.0, 1.0)
+  Widget _buildAdvancedLoanCard(
+    Prestamo_Detallado_DTO prestamo,
+    Color primaryOrange,
+    Color surfaceColor,
+  ) {
+    // estaEnMora y moraPendiente no existen en el modelo actual.
+    // Se dejan como false/0.0 hasta que el backend los exponga.
+    const bool isMora = false;
+    const double moraPendiente = 0.0;
+
+    final double capitalInicial = prestamo.base.capitalInicial;
+    final double capitalPagado = prestamo.base.capitalPagado;
+    final double interesPagado = prestamo.base.interesPagado;
+    final double interesPendiente = prestamo.base.interesPendiente;
+
+    // Total a Pagar original + acumulado
+    final double totalAPagar = capitalInicial + interesPagado + interesPendiente;
+    // Total ya pagado
+    final double totalPagado = capitalPagado + interesPagado;
+
+    double progress = totalAPagar > 0
+        ? (totalPagado / totalAPagar).clamp(0.0, 1.0)
         : 0.0;
-    
-    // Cálculo del saldo pendiente total (Capital Restante + Mora Pendiente)
-    // Nota: El RPC devuelve acumulados, así que calculamos el pendiente
-    double capitalPendiente = prestamo.presCapitalInicial - prestamo.capitalPagado;
-    double totalPendiente = capitalPendiente + prestamo.moraPendiente;
+
+    // Saldo pendiente total (Capital pendiente + Interés Pendiente)
+    double totalPendiente = (capitalInicial - capitalPagado) + interesPendiente;
     
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -283,7 +302,7 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            prestamo.clienteNombre ?? 'Sin Nombre',
+                            prestamo.clienteNombre,
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -291,7 +310,7 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
                             ),
                           ),
                           Text(
-                            'Préstamo #${prestamo.presId}',
+                            'Préstamo #${prestamo.base.id}',
                             style: GoogleFonts.poppins(
                               color: Colors.white.withOpacity(0.4),
                               fontSize: 12,
@@ -310,9 +329,9 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildMetric('Monto Total', prestamo.presCapitalInicial, isCurrency: true),
-                    _buildMetric('Pendiente', totalPendiente, isCurrency: true, highlight: isMora),
-                    _buildMetric('Mora', prestamo.moraPendiente, isCurrency: true, highlight: prestamo.moraPendiente > 0),
+                    _buildMetric('Progreso', progress * 100, isCurrency: false, suffix: '%'),
+                    _buildMetric('Pendiente', totalPendiente, isCurrency: true),
+                    _buildMetric('Mora/Int', interesPendiente, isCurrency: true, highlight: interesPendiente > 0),
                   ],
                 ),
                 
@@ -326,7 +345,7 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'Progreso de Pago',
+                          'Progreso (Total)',
                           style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withOpacity(0.4)),
                         ),
                         Text(
@@ -365,17 +384,17 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
                         Icon(Icons.calendar_month_outlined, size: 14, color: Colors.white.withOpacity(0.4)),
                         const SizedBox(width: 4),
                         Text(
-                          'Inició: ${DateFormat('dd/MM/yy').format(prestamo.presFechaInicioPago)}',
+                          'Inició: ${DateFormat('dd/MM/yy').format(prestamo.base.fechaInicioPago)}',
                           style: GoogleFonts.poppins(fontSize: 11, color: Colors.white.withOpacity(0.4)),
                         ),
                       ],
                     ),
                     Text(
-                      isMora ? '¡${prestamo.diasAtraso} días de atraso!' : 'Al día',
+                      'Al día',
                       style: GoogleFonts.poppins(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: isMora ? Colors.redAccent : Colors.greenAccent.withOpacity(0.7),
+                        color: Colors.greenAccent.withOpacity(0.7),
                       ),
                     ),
                   ],
@@ -409,10 +428,10 @@ class _PrestamosScreenState extends State<PrestamosScreen> with SingleTickerProv
     );
   }
 
-  Widget _buildMetric(String label, dynamic value, {required bool isCurrency, bool highlight = false}) {
+  Widget _buildMetric(String label, dynamic value, {required bool isCurrency, bool highlight = false, String suffix = ''}) {
     String displayValue = isCurrency 
       ? NumberFormat.compactCurrency(symbol: 'L ', decimalDigits: 1).format(value)
-      : value.toString();
+      : '${value.toStringAsFixed(1)}$suffix';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
